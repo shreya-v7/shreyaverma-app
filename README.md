@@ -1,56 +1,73 @@
-# Welcome to your Expo app 👋
+# MySpace
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A private, **offline-only** personal companion app for my iPhone — journal, tasks, routines, and a quick reference to my work. It's a personal extension of [shreyaverma.com](https://shreyaverma.com): on first launch it seeds my journal with my existing diary/blog entries and shows my experience, education, certificates, and projects pulled from the same data.
 
-## Get started
+> No backend. No accounts. No sync. No analytics. Everything lives in a local SQLite database on the device.
 
-1. Install dependencies
+Built with **Expo (SDK 56) + React Native + TypeScript + Expo Router**.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## Features
 
-   ```bash
-   npx expo start
-   ```
+- **Journal / Notes** — free-form entries, auto-saved with timestamps, newest-first. Tap to edit, swipe to delete, tag (`diary`, `idea`, `log`, …), filter by tag, and full-text search. Seeded with my existing diary + blog entries (editable afterwards, never synced back to the website).
+- **Tasks / To-dos** — add / complete / delete / reorder, optional due date + priority (low / med / high with a color dot), grouped into **Today / Upcoming / Done**.
+- **Routines / Habits** — daily or specific-weekday recurrence, a daily checklist with checkboxes, and a **streak counter** per routine.
+- **Reference** — read-only view of experience, education, certificates, and projects, sourced at build time from the website's data shapes.
+- **Home / Dashboard** — greeting, "new journal entry" shortcut, today's tasks + routines, and an **On this day** memory card.
+- **Settings** — export all data as JSON (share via Files / AirDrop / Mail) for manual backup, an optional reminders toggle, and a data summary.
+- Light/dark mode via `useColorScheme`, throughout.
 
-In the output, you'll find options to open the app in a
+## How to run it (Expo Go)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+No custom native build needed — everything runs in **Expo Go**.
 
 ```bash
-npm run reset-project
+# 1. install dependencies
+npm install
+
+# 2. start the dev server
+npx expo start
+
+# 3. on your iPhone:
+#    - install "Expo Go" from the App Store
+#    - make sure the phone and computer are on the same Wi-Fi
+#    - open the Camera app and scan the QR code in the terminal
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Press `i` in the terminal to launch the iOS Simulator, or `r` to reload.
 
-### Other setup steps
+### A note on reminders (optional)
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Routine/task reminders use **local notifications**. These work in Expo Go on a physical iPhone. On Android, Expo Go (SDK 53+) has limited notification support — for fully reliable scheduling there, build a custom dev client (`npx expo run:android` or an EAS dev build). The app is fully functional without reminders; they're purely additive.
 
-## Learn more
+## Project structure
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+src/
+  app/                 # Expo Router routes
+    _layout.tsx        # root: gesture root, SQLite provider, theme, modal stack
+    (tabs)/            # bottom tabs: Home, Journal, Tasks, Routines, Reference, Settings
+    entry/[id].tsx     # full-screen journal editor (modal)
+  components/          # reusable UI (screen, fab, swipeable-row, segmented, editors…)
+  hooks/               # reactive data hooks (re-query on DB change) + theming
+  lib/                 # db schema/migrations, repository, export, notifications, helpers
+  data/                # reference content + diary seed (mirrors the website data)
+  types/               # Entry, Task, Routine + reference data shapes
+  constants/           # colors, spacing, fonts
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Data & persistence
 
-## Join the community
+- **expo-sqlite** with `SQLiteProvider` + a synchronous repository layer.
+- Hooks subscribe to `addDatabaseChangeListener` so the UI updates instantly after any write.
+- First-launch seeding (journal entries from `src/data/diary.ts`, a few starter routines/tasks) runs once, guarded by `PRAGMA user_version`.
+- The reference tab data lives in `src/data/reference.ts`, kept in sync with the website's `src/data/*` files and typed to match `src/types`.
 
-Join our community of developers creating universal apps.
+## Backup
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Settings → **Export all data as JSON** writes a `myspace-backup-YYYY-MM-DD.json` file and opens the system share sheet (via `expo-file-system` + `expo-sharing`).
+
+---
+
+Private project — built for personal use.

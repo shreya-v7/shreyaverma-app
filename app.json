@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "shreyaverma-app",
+    "name": "MySpace",
     "slug": "shreyaverma-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -28,13 +28,17 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#7C5CFC",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76
           }
         }
-      ]
+      ],
+      "expo-sqlite",
+      "expo-sharing",
+      "expo-notifications",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
