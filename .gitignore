@@ -100,8 +100,10 @@ src/data/food-plan.json
 src/data/skincare-plan.json
 src/data/cfa-plan.json
 src/data/piano-plan.json
+src/data/therapy-context.json
 src/types/food-plan.ts
 src/types/heals-plans.ts
+src/lib/therapy-privacy.ts
 
 # Sideload / native patch notes (private)
 SIDELOAD.md
