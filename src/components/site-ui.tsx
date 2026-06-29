@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  useWindowDimensions,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -15,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { screenShell, verticalScrollLock } from '@/constants/scroll';
+import { useSiteContentWidth } from '@/hooks/use-layout-width';
 import { resolveAsset } from '@/data/assets';
 import { socialItems } from '@/data/site';
 import { useTheme } from '@/hooks/use-theme';
@@ -29,16 +31,23 @@ export function SiteScreen({
   contentStyle?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const columnWidth = Math.min(windowWidth - Spacing.four * 2, MaxContentWidth);
+
   return (
-    <View style={[screenShell, { backgroundColor: theme.paper }]}>
-      <SafeAreaView edges={['top', 'left', 'right']} style={screenShell}>
+    <View style={[screenShell, { backgroundColor: theme.paper, width: windowWidth }]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[screenShell, { width: windowWidth }]}>
         <ScrollView
           {...verticalScrollLock}
-          style={screenShell}
+          style={{ width: windowWidth, maxWidth: windowWidth }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[styles.scroll, contentStyle]}>
-          <View style={styles.column}>{children}</View>
+          contentContainerStyle={[
+            styles.scroll,
+            { width: windowWidth, maxWidth: windowWidth, alignItems: 'center' },
+            contentStyle,
+          ]}>
+          <View style={[styles.column, { width: columnWidth, maxWidth: columnWidth }]}>{children}</View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -113,7 +122,7 @@ export function SocialRow({ center = true }: { center?: boolean }) {
   );
 }
 
-/** Pill row used for in-page section navigation (About / Diary tabs). */
+/** Pill grid for in-page section navigation — fixed 2-column layout, never scrolls sideways. */
 export function PillTabs<T extends string>({
   value,
   onChange,
@@ -124,8 +133,12 @@ export function PillTabs<T extends string>({
   options: { value: T; label: string }[];
 }) {
   const theme = useTheme();
+  const contentWidth = useSiteContentWidth();
+  const gap = Spacing.two;
+  const pillWidth = Math.floor((contentWidth - gap) / 2);
+
   return (
-    <View style={styles.pillsWrap}>
+    <View style={[styles.pillsWrap, { width: contentWidth, maxWidth: contentWidth }]}>
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -134,14 +147,19 @@ export function PillTabs<T extends string>({
             onPress={() => onChange(opt.value)}
             style={[
               styles.pill,
-              { borderColor: theme.line },
+              {
+                width: pillWidth,
+                borderColor: theme.line,
+              },
               active && { backgroundColor: theme.ink, borderColor: theme.ink },
             ]}>
             <ThemedText
               type="small"
+              numberOfLines={1}
               style={{
                 color: active ? theme.paper : theme.muted,
                 fontFamily: 'Geist_500Medium',
+                textAlign: 'center',
               }}>
               {opt.label}
             </ThemedText>
@@ -237,18 +255,13 @@ function RoleBlock({ role }: { role: Role }) {
 
 const styles = StyleSheet.create({
   scroll: {
-    width: '100%',
-    maxWidth: '100%',
     paddingHorizontal: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.six,
-    alignItems: 'stretch',
     flexGrow: 1,
   },
   column: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
     overflow: 'hidden',
+    alignSelf: 'center',
   },
   brand: { paddingTop: Spacing.two, paddingBottom: Spacing.four, width: '100%' },
   sectionRow: {
@@ -273,13 +286,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.two,
     paddingVertical: Spacing.one,
-    width: '100%',
+    overflow: 'hidden',
   },
   pill: {
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.two,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tag: {
     paddingHorizontal: Spacing.two,

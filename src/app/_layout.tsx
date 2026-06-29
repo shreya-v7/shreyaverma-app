@@ -9,8 +9,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import { Suspense, useEffect } from 'react';
-import { ActivityIndicator, useColorScheme, View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -20,22 +19,6 @@ import { Colors } from '@/constants/theme';
 import { screenShell } from '@/constants/scroll';
 import { DATABASE_NAME, migrateDb } from '@/lib/db';
 import { LockProvider, useLock } from '@/lib/lock-context';
-
-function DbLoading() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
-  return (
-    <View
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.background,
-      }}>
-      <ActivityIndicator color={colors.ink} />
-    </View>
-  );
-}
 
 function Gate() {
   const { ready, unlocked, active } = useLock();
@@ -82,18 +65,16 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <LockProvider>
-          <Suspense fallback={<DbLoading />}>
-            <SQLiteProvider
-              databaseName={DATABASE_NAME}
-              onInit={migrateDb}
-              options={{ enableChangeListener: true }}
-              useSuspense>
-              <ThemeProvider value={navTheme}>
-                <StatusBar style="auto" />
-                <Gate />
-              </ThemeProvider>
-            </SQLiteProvider>
-          </Suspense>
+          <SQLiteProvider
+            databaseName={DATABASE_NAME}
+            onInit={migrateDb}
+            options={{ enableChangeListener: false }}
+            useSuspense={false}>
+            <ThemeProvider value={navTheme}>
+              <StatusBar style="auto" />
+              <Gate />
+            </ThemeProvider>
+          </SQLiteProvider>
         </LockProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
