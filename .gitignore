@@ -42,3 +42,68 @@ example
 # generated native folders
 /ios
 /android
+
+# ---------------------------------------------------------------------------
+# Private My Space (local only — never commit or push)
+# ---------------------------------------------------------------------------
+private-myspace/
+
+# Space hub + private routes
+src/app/(tabs)/space.tsx
+src/app/(tabs)/journal.tsx
+src/app/(tabs)/tasks.tsx
+src/app/(tabs)/routines.tsx
+src/app/(tabs)/settings.tsx
+src/app/(tabs)/meals.tsx
+src/app/(tabs)/skincare.tsx
+src/app/(tabs)/cfa-plan.tsx
+src/app/(tabs)/piano-plan.tsx
+src/app/(tabs)/claude-chat.tsx
+src/app/(tabs)/sherrii-heals.tsx
+src/app/entry/
+
+# Private UI
+src/components/lock-screen.tsx
+src/components/privacy-cover.tsx
+src/components/heals-chat-panel.tsx
+src/components/meal-plan-content.tsx
+src/components/routine-plan-content.tsx
+src/components/task-editor.tsx
+src/components/routine-editor.tsx
+src/components/date-field.tsx
+src/components/tag-pill.tsx
+src/components/priority.tsx
+src/components/swipeable-row.tsx
+src/components/fab.tsx
+src/components/empty-state.tsx
+src/components/segmented.tsx
+
+# Private logic + data
+src/lib/auth.ts
+src/lib/db.ts
+src/lib/repo.ts
+src/lib/export.ts
+src/lib/notifications.ts
+src/lib/secure-field.ts
+src/lib/lock-context.tsx
+src/lib/food-plan.ts
+src/lib/heals-plans.ts
+src/lib/prefs.ts
+src/lib/id.ts
+src/lib/datetime.ts
+src/hooks/use-db.ts
+src/hooks/use-food-plan-chat.ts
+src/hooks/use-heals-chat.ts
+src/data/seed.ts
+src/data/reference.ts
+src/data/food-plan.json
+src/data/skincare-plan.json
+src/data/cfa-plan.json
+src/data/piano-plan.json
+src/types/food-plan.ts
+src/types/heals-plans.ts
+
+# Sideload / native patch notes (private)
+SIDELOAD.md
+patches/
+

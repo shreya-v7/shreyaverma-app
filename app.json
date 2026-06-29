@@ -10,13 +10,10 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "supportsTablet": true,
-      "bundleIdentifier": "com.shreyaverma.myspace",
-      "infoPlist": {
-        "NSFaceIDUsageDescription": "Unlock your private space with Face ID."
-      }
+      "bundleIdentifier": "com.shreyaverma.app"
     },
     "android": {
-      "package": "com.shreyaverma.myspace",
+      "package": "com.shreyaverma.app",
       "adaptiveIcon": {
         "backgroundColor": "#0B0A0F",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -50,16 +47,7 @@
           }
         }
       ],
-      "expo-sqlite",
-      "expo-sharing",
-      "@react-native-community/datetimepicker",
-      "expo-secure-store",
-      [
-        "expo-local-authentication",
-        {
-          "faceIDPermission": "Unlock your private space with Face ID."
-        }
-      ]
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

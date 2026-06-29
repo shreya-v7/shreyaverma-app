@@ -58,25 +58,6 @@ export default function TabsLayout() {
             tabBarIcon: ({ color }) => <Ionicons name="grid-outline" size={22} color={color} />,
           }}
         />
-        <Tabs.Screen
-          name="space"
-          options={{
-            title: 'Space',
-            tabBarIcon: ({ color }) => <Ionicons name="sparkles-outline" size={22} color={color} />,
-          }}
-        />
-
-        {/* Private routes reachable from the Space hub, hidden from the tab bar. */}
-        <Tabs.Screen name="journal" options={{ href: null }} />
-        <Tabs.Screen name="tasks" options={{ href: null }} />
-        <Tabs.Screen name="routines" options={{ href: null }} />
-        <Tabs.Screen name="settings" options={{ href: null }} />
-        <Tabs.Screen name="meals" options={{ href: null }} />
-        <Tabs.Screen name="skincare" options={{ href: null }} />
-        <Tabs.Screen name="cfa-plan" options={{ href: null }} />
-        <Tabs.Screen name="piano-plan" options={{ href: null }} />
-        <Tabs.Screen name="claude-chat" options={{ href: null }} />
-        <Tabs.Screen name="sherrii-heals" options={{ href: null }} />
       </Tabs>
     </View>
   );
