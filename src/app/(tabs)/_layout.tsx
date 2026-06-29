@@ -71,6 +71,12 @@ export default function TabsLayout() {
         <Tabs.Screen name="tasks" options={{ href: null }} />
         <Tabs.Screen name="routines" options={{ href: null }} />
         <Tabs.Screen name="settings" options={{ href: null }} />
+        <Tabs.Screen name="meals" options={{ href: null }} />
+        <Tabs.Screen name="skincare" options={{ href: null }} />
+        <Tabs.Screen name="cfa-plan" options={{ href: null }} />
+        <Tabs.Screen name="piano-plan" options={{ href: null }} />
+        <Tabs.Screen name="claude-chat" options={{ href: null }} />
+        <Tabs.Screen name="sherrii-heals" options={{ href: null }} />
       </Tabs>
     </View>
   );
