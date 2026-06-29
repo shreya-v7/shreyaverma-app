@@ -1,4 +1,4 @@
-// Core app types for MySpace — a private, local-only companion app.
+// Core app types for MySpace, a private, local-only companion app.
 //
 // The "reference" types (Company, Role, Certificate, Project, PersonalPost)
 // intentionally mirror the shapes used by the personal website
@@ -106,6 +106,26 @@ export interface Project {
   image: string;
   link: string;
   tags: string[];
+}
+
+export type AchievementCategory =
+  | 'Award'
+  | 'Publication'
+  | 'Scholarship'
+  | 'Certification'
+  | 'Hackathon'
+  | 'Leadership';
+
+export interface Achievement {
+  title: string;
+  category: AchievementCategory;
+  group?: string;
+  date?: string;
+  year?: number;
+  context: string;
+  highlight: string;
+  details?: string[];
+  link?: string;
 }
 
 export interface PersonalPost {

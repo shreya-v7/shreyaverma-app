@@ -1,10 +1,24 @@
-import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
+import { StyleSheet, Text, type TextProps } from 'react-native';
 
 import { Fonts, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+export type ThemedTextType =
+  | 'default'
+  | 'title'
+  | 'pageTitle'
+  | 'sectionTitle'
+  | 'siteName'
+  | 'small'
+  | 'smallBold'
+  | 'subtitle'
+  | 'label'
+  | 'link'
+  | 'linkPrimary'
+  | 'code';
+
 export type ThemedTextProps = TextProps & {
-  type?: 'default' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'linkPrimary' | 'code';
+  type?: ThemedTextType;
   themeColor?: ThemeColor;
 };
 
@@ -17,9 +31,13 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         { color: theme[themeColor ?? 'text'] },
         type === 'default' && styles.default,
         type === 'title' && styles.title,
+        type === 'pageTitle' && styles.pageTitle,
+        type === 'sectionTitle' && styles.sectionTitle,
+        type === 'siteName' && styles.siteName,
         type === 'small' && styles.small,
         type === 'smallBold' && styles.smallBold,
         type === 'subtitle' && styles.subtitle,
+        type === 'label' && styles.label,
         type === 'link' && styles.link,
         type === 'linkPrimary' && styles.linkPrimary,
         type === 'code' && styles.code,
@@ -32,42 +50,70 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 
 const styles = StyleSheet.create({
   small: {
+    fontFamily: Fonts.regular,
     fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 500,
+    lineHeight: 21,
   },
   smallBold: {
+    fontFamily: Fonts.semibold,
     fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 700,
+    lineHeight: 21,
   },
   default: {
+    fontFamily: Fonts.regular,
     fontSize: 16,
-    lineHeight: 24,
-    fontWeight: 500,
+    lineHeight: 26,
   },
   title: {
-    fontSize: 48,
-    fontWeight: 600,
-    lineHeight: 52,
+    fontFamily: Fonts.semibold,
+    fontSize: 40,
+    lineHeight: 44,
+    letterSpacing: -1,
+  },
+  pageTitle: {
+    fontFamily: Fonts.medium,
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -0.5,
+  },
+  sectionTitle: {
+    fontFamily: Fonts.semibold,
+    fontSize: 20,
+    lineHeight: 26,
+    letterSpacing: -0.3,
+  },
+  siteName: {
+    fontFamily: Fonts.semibold,
+    fontSize: 28,
+    lineHeight: 32,
+    letterSpacing: -0.6,
   },
   subtitle: {
-    fontSize: 32,
-    lineHeight: 44,
-    fontWeight: 600,
+    fontFamily: Fonts.semibold,
+    fontSize: 22,
+    lineHeight: 30,
+    letterSpacing: -0.4,
+  },
+  label: {
+    fontFamily: Fonts.monoMedium,
+    fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
   },
   link: {
-    lineHeight: 30,
+    fontFamily: Fonts.medium,
     fontSize: 14,
+    lineHeight: 22,
   },
   linkPrimary: {
-    lineHeight: 30,
+    fontFamily: Fonts.medium,
     fontSize: 14,
-    color: '#3c87f7',
+    lineHeight: 22,
   },
   code: {
     fontFamily: Fonts.mono,
-    fontWeight: Platform.select({ android: 700 }) ?? 500,
     fontSize: 12,
+    lineHeight: 18,
   },
 });

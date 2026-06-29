@@ -1,264 +1,236 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Linking, Pressable, StyleSheet, View } from 'react-native';
 
-import { PriorityDot } from '@/components/priority';
-import { Header, Screen } from '@/components/screen';
+import { BrandHeader, SiteScreen, SectionRow, SocialRow, Tag } from '@/components/site-ui';
 import { ThemedText } from '@/components/themed-text';
-import { BottomTabInset, Spacing } from '@/constants/theme';
-import { useDb, useOnThisDay, useTasks, useTodayRoutines } from '@/hooks/use-db';
+import { Spacing } from '@/constants/theme';
+import { profileImage, resolveAsset } from '@/data/assets';
+import { bio, metaData } from '@/data/site';
+import { experienceData, sortedProjects } from '@/data/reference';
+import { blogsPosts } from '@/data/diary';
 import { useTheme } from '@/hooks/use-theme';
-import { formatDueDate, isPast, relativeTime, startOfDay } from '@/lib/datetime';
-import { toggleRoutineDone, toggleTask } from '@/lib/repo';
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
+function highlightCompanies() {
+  const names = ['Proofpoint', 'Morgan Stanley'];
+  return names
+    .map((n) => experienceData.find((c) => c.company === n))
+    .filter((c): c is NonNullable<typeof c> => c != null);
 }
 
-export default function DashboardScreen() {
+export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const db = useDb();
 
-  const tasks = useTasks();
-  const routines = useTodayRoutines();
-  const onThisDay = useOnThisDay();
-
-  const todayTasks = useMemo(
-    () =>
-      tasks
-        .filter((t) => !t.done && (t.dueDate == null || startOfDay(t.dueDate) <= startOfDay()))
-        .slice(0, 5),
-    [tasks],
-  );
-
-  const today = new Date().toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  const routinesDone = routines.filter((r) => r.doneToday).length;
+  const highlights = highlightCompanies();
+  const quantastica = sortedProjects.find((p) => p.title.startsWith('Quantastica'));
+  const research = sortedProjects
+    .filter((p) => p.title === 'Multifactor Authentication' || p.title === 'DiagZone')
+    .slice(0, 2);
+  const latestBlogs = blogsPosts.slice(0, 2);
 
   return (
-    <Screen>
-      <Header title={greeting()} subtitle={today} />
+    <SiteScreen>
+      <BrandHeader />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Pressable
-          onPress={() => router.push('/entry/new')}
-          style={({ pressed }) => [
-            styles.newEntry,
-            { backgroundColor: theme.tint },
-            pressed && styles.pressed,
-          ]}>
-          <Ionicons name="create-outline" size={20} color="#FFFFFF" />
-          <ThemedText style={styles.newEntryText}>New journal entry</ThemedText>
-          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+      <View style={styles.hero}>
+        <Pressable onPress={() => Linking.openURL('https://x.com/shreyasapphire')}>
+          <Image source={profileImage} style={styles.avatar} />
         </Pressable>
 
-        {onThisDay ? (
-          <Pressable
-            onPress={() => router.push(`/entry/${onThisDay.id}`)}
-            style={({ pressed }) => [
-              styles.card,
-              { backgroundColor: theme.backgroundElement, paddingBottom: Spacing.three },
-              pressed && styles.pressed,
-            ]}>
-            <View style={styles.cardTitleRow}>
-              <Ionicons name="time-outline" size={16} color={theme.tint} />
-              <ThemedText type="small" style={{ color: theme.tint, fontWeight: '700' }}>
-                ON THIS DAY
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {relativeTime(onThisDay.createdAt)}
-              </ThemedText>
-            </View>
-            <ThemedText style={styles.memoryTitle} numberOfLines={1}>
-              {onThisDay.title ?? (onThisDay.body.split('\n')[0] || 'Untitled')}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
-              {onThisDay.body.replace(/\n+/g, ' ')}
-            </ThemedText>
-          </Pressable>
-        ) : null}
-
-        {/* Today's tasks */}
-        <SectionTitle
-          icon="checkmark-circle-outline"
-          label="Today's tasks"
-          onPress={() => router.push('/tasks')}
-        />
-        <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-          {todayTasks.length === 0 ? (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.emptyLine}>
-              Nothing due today. Nice.
-            </ThemedText>
-          ) : (
-            todayTasks.map((t, i) => {
-              const overdue = t.dueDate != null && isPast(t.dueDate);
-              return (
-                <View
-                  key={t.id}
-                  style={[styles.itemRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }]}>
-                  <Pressable onPress={() => toggleTask(db, t.id)} hitSlop={8}>
-                    <Ionicons name="ellipse-outline" size={22} color={theme.textSecondary} />
-                  </Pressable>
-                  <ThemedText style={styles.itemText} numberOfLines={1}>
-                    {t.title}
-                  </ThemedText>
-                  <PriorityDot priority={t.priority} />
-                  {t.dueDate != null ? (
-                    <ThemedText type="small" style={{ color: overdue ? theme.danger : theme.textSecondary }}>
-                      {formatDueDate(t.dueDate)}
-                    </ThemedText>
-                  ) : null}
-                </View>
-              );
-            })
-          )}
+        <View style={styles.tagline}>
+          <ThemedText type="subtitle">{metaData.tagline}</ThemedText>
+          <ThemedText type="small" themeColor="muted" style={{ marginTop: 2 }}>
+            {metaData.taglineAside}
+          </ThemedText>
         </View>
 
-        {/* Today's routines */}
-        <SectionTitle
-          icon="repeat-outline"
-          label={`Routines · ${routinesDone}/${routines.length}`}
-          onPress={() => router.push('/routines')}
-        />
-        <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-          {routines.length === 0 ? (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.emptyLine}>
-              No routines scheduled today.
-            </ThemedText>
-          ) : (
-            routines.map((r, i) => (
-              <View
-                key={r.id}
-                style={[styles.itemRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }]}>
-                <Pressable onPress={() => toggleRoutineDone(db, r.id)} hitSlop={8}>
-                  <Ionicons
-                    name={r.doneToday ? 'checkmark-circle' : 'ellipse-outline'}
-                    size={22}
-                    color={r.doneToday ? theme.success : theme.textSecondary}
-                  />
-                </Pressable>
-                <ThemedText
-                  style={[styles.itemText, r.doneToday && { color: theme.textSecondary }]}
-                  numberOfLines={1}>
-                  {r.title}
-                </ThemedText>
-                {r.streak > 0 ? (
-                  <View style={styles.streak}>
-                    <Ionicons name="flame" size={13} color={theme.warning} />
-                    <ThemedText type="small" style={{ color: theme.warning, fontWeight: '700' }}>
-                      {r.streak}
-                    </ThemedText>
-                  </View>
+        {bio.map((p, i) => (
+          <ThemedText key={i} style={styles.bio}>
+            {p}
+          </ThemedText>
+        ))}
+
+        <View style={{ marginTop: Spacing.three }}>
+          <SocialRow center />
+        </View>
+      </View>
+
+      {/* Experience timeline */}
+      <SectionRow
+        title="Experience Timeline"
+        subtitle="A quick vertical view of recent roles."
+        actionLabel="View all"
+        onAction={() => router.push('/about')}
+      />
+      <View style={styles.timeline}>
+        <View style={[styles.timelineLine, { backgroundColor: theme.line }]} />
+        {highlights.map((company, index) => {
+          const role = company.roles[0];
+          return (
+            <View key={company.company} style={styles.timelineItem}>
+              <View style={styles.dotWrap}>
+                <View style={[styles.dotOuter, { backgroundColor: theme.ink }]}>
+                  <View style={[styles.dotInner, { backgroundColor: theme.paper }]} />
+                </View>
+              </View>
+              <View style={[styles.timelineCard, { borderColor: theme.line, backgroundColor: theme.panel }]}>
+                <View style={styles.timelineTop}>
+                  <ThemedText type="code" themeColor="faint">
+                    {String(index + 1).padStart(2, '0')} · {company.company}
+                  </ThemedText>
+                  <ThemedText type="code" themeColor="faint">
+                    {role.duration}
+                  </ThemedText>
+                </View>
+                <ThemedText style={styles.roleTitle}>{role.title}</ThemedText>
+                {role.content[0] ? (
+                  <ThemedText type="small" themeColor="muted" style={{ marginTop: 4 }}>
+                    {role.content[0]}
+                  </ThemedText>
                 ) : null}
               </View>
-            ))
-          )}
-        </View>
+            </View>
+          );
+        })}
+      </View>
 
-        <View style={{ height: Spacing.six }} />
-      </ScrollView>
-    </Screen>
-  );
-}
+      {/* Featured projects */}
+      <View style={{ marginTop: Spacing.five }}>
+        <SectionRow
+          title="Featured Projects"
+          subtitle="Quantastica up front, with two research highlights."
+          actionLabel="See all"
+          onAction={() => router.push('/projects')}
+        />
+      </View>
 
-function SectionTitle({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-}) {
-  const theme = useTheme();
-  return (
-    <Pressable onPress={onPress} style={styles.sectionTitle}>
-      <Ionicons name={icon} size={16} color={theme.textSecondary} />
-      <ThemedText type="small" themeColor="textSecondary" style={styles.sectionLabel}>
-        {label.toUpperCase()}
-      </ThemedText>
-      <Ionicons name="chevron-forward" size={14} color={theme.textSecondary} />
-    </Pressable>
+      {quantastica ? (
+        <Pressable
+          onPress={() => Linking.openURL(quantastica.link)}
+          style={({ pressed }) => [styles.spotlight, pressed && { opacity: 0.92 }]}>
+          {resolveAsset(quantastica.image) ? (
+            <Image source={resolveAsset(quantastica.image)} style={styles.spotlightImg} />
+          ) : null}
+          <View style={styles.spotlightOverlay} />
+          <View style={styles.spotlightContent}>
+            <ThemedText type="label" style={{ color: '#e5e5e5' }}>
+              {quantastica.category}
+            </ThemedText>
+            <ThemedText style={styles.spotlightTitle}>{quantastica.title}</ThemedText>
+            <ThemedText type="small" style={{ color: '#e9e9e9', marginTop: 6 }}>
+              {quantastica.description}
+            </ThemedText>
+            <View style={styles.spotlightTags}>
+              {quantastica.tags.slice(0, 4).map((t) => (
+                <View key={t} style={styles.spotlightTag}>
+                  <ThemedText type="small" style={{ color: '#f4f4f4', fontSize: 11 }}>
+                    {t}
+                  </ThemedText>
+                </View>
+              ))}
+            </View>
+          </View>
+        </Pressable>
+      ) : null}
+
+      {research.map((p) => (
+        <Pressable
+          key={p.title}
+          onPress={() => Linking.openURL(p.link)}
+          style={({ pressed }) => [
+            styles.researchCard,
+            { borderColor: theme.line, backgroundColor: theme.panel },
+            pressed && { opacity: 0.8 },
+          ]}>
+          <ThemedText type="label" themeColor="faint">
+            {p.category}
+          </ThemedText>
+          <ThemedText style={[styles.roleTitle, { marginTop: 6 }]}>{p.title}</ThemedText>
+          <ThemedText type="small" themeColor="muted" style={{ marginTop: 4 }}>
+            {p.description}
+          </ThemedText>
+          <View style={styles.researchFoot}>
+            <ThemedText type="small" style={{ color: theme.ink }}>
+              View paper
+            </ThemedText>
+            <Ionicons name="arrow-forward" size={14} color={theme.ink} />
+          </View>
+        </Pressable>
+      ))}
+
+      {/* Latest writing */}
+      <View style={{ marginTop: Spacing.five }}>
+        <SectionRow
+          title="Latest Writing"
+          subtitle="Recent posts as simple tiles."
+          actionLabel="Open"
+          onAction={() => router.push('/diary')}
+        />
+      </View>
+      {latestBlogs.map((post) => (
+        <Pressable
+          key={post.id}
+          onPress={() => post.link && Linking.openURL(post.link)}
+          style={({ pressed }) => [
+            styles.researchCard,
+            { borderColor: theme.line, backgroundColor: theme.panel },
+            pressed && { opacity: 0.8 },
+          ]}>
+          {post.tags?.[0] ? (
+            <ThemedText type="label" themeColor="faint">
+              {post.tags[0]}
+            </ThemedText>
+          ) : null}
+          <ThemedText style={[styles.roleTitle, { marginTop: 6 }]}>{post.title}</ThemedText>
+          <ThemedText type="small" themeColor="muted" style={{ marginTop: 4 }}>
+            {post.caption}
+          </ThemedText>
+          <View style={styles.researchFoot}>
+            <ThemedText type="small" style={{ color: theme.ink }}>
+              Read
+            </ThemedText>
+            <Ionicons name="open-outline" size={14} color={theme.ink} />
+          </View>
+        </Pressable>
+      ))}
+    </SiteScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.six,
-    gap: Spacing.two,
-  },
-  pressed: { opacity: 0.8 },
-  newEntry: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    borderRadius: 16,
-    padding: Spacing.four,
+  hero: { alignItems: 'center', marginBottom: Spacing.five },
+  avatar: { width: 140, height: 140, borderRadius: 70, marginBottom: Spacing.four },
+  tagline: { alignItems: 'center', flexDirection: 'row', gap: 8, marginBottom: Spacing.three },
+  bio: { textAlign: 'left', marginBottom: Spacing.two, alignSelf: 'stretch' },
+  timeline: { paddingLeft: Spacing.one },
+  timelineLine: { position: 'absolute', top: 6, bottom: 6, left: 9, width: StyleSheet.hairlineWidth },
+  timelineItem: { flexDirection: 'row', gap: Spacing.three, marginBottom: Spacing.three },
+  dotWrap: { width: 20, alignItems: 'center', marginTop: 4 },
+  dotOuter: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  dotInner: { width: 7, height: 7, borderRadius: 4 },
+  timelineCard: { flex: 1, borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: Spacing.three },
+  timelineTop: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two },
+  roleTitle: { fontFamily: 'Geist_600SemiBold', fontSize: 15, marginTop: 4 },
+  spotlight: {
+    height: 280,
+    borderRadius: 20,
+    overflow: 'hidden',
     marginBottom: Spacing.two,
+    justifyContent: 'flex-end',
+    backgroundColor: '#111',
   },
-  newEntryText: {
-    flex: 1,
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
+  spotlightImg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', opacity: 0.4 },
+  spotlightOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(10,10,10,0.45)' },
+  spotlightContent: { padding: Spacing.four },
+  spotlightTitle: { fontFamily: 'Geist_600SemiBold', fontSize: 22, color: '#ffffff', marginTop: 6 },
+  spotlightTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: Spacing.three },
+  spotlightTag: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.16)',
   },
-  card: {
-    borderRadius: 16,
-    paddingHorizontal: Spacing.three,
-    marginBottom: Spacing.two,
-  },
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    paddingTop: Spacing.three,
-  },
-  memoryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: Spacing.two,
-  },
-  sectionTitle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    marginTop: Spacing.three,
-    marginBottom: Spacing.one,
-    paddingHorizontal: Spacing.one,
-  },
-  sectionLabel: {
-    flex: 1,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.three,
-  },
-  itemText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  emptyLine: {
-    paddingVertical: Spacing.four,
-    textAlign: 'center',
-  },
-  streak: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
+  researchCard: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: Spacing.three, marginBottom: Spacing.two },
+  researchFoot: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.three },
 });

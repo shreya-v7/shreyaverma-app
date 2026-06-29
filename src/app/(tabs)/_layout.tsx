@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
+import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function TabsLayout() {
@@ -10,13 +11,13 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.tint,
-        tabBarInactiveTintColor: theme.textSecondary,
+        tabBarActiveTintColor: theme.ink,
+        tabBarInactiveTintColor: theme.faint,
         tabBarStyle: {
-          backgroundColor: theme.background,
-          borderTopColor: theme.border,
+          backgroundColor: theme.paper,
+          borderTopColor: theme.line,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 10, fontFamily: Fonts.medium, letterSpacing: 0.2 },
       }}>
       <Tabs.Screen
         name="index"
@@ -26,46 +27,41 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="journal"
+        name="about"
         options={{
-          title: 'Journal',
+          title: 'About',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="diary"
+        options={{
+          title: 'Diary',
           tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="tasks"
+        name="projects"
         options={{
-          title: 'Tasks',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkmark-circle-outline" size={size} color={color} />
-          ),
+          title: 'Projects',
+          tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="routines"
+        name="space"
         options={{
-          title: 'Routines',
-          tabBarIcon: ({ color, size }) => <Ionicons name="repeat-outline" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="reference"
-        options={{
-          title: 'Reference',
+          title: 'Space',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="briefcase-outline" size={size} color={color} />
+            <Ionicons name="sparkles-outline" size={size} color={color} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
-          ),
-        }}
-      />
+
+      {/* Private routes reachable from the Space hub, hidden from the tab bar. */}
+      <Tabs.Screen name="journal" options={{ href: null }} />
+      <Tabs.Screen name="tasks" options={{ href: null }} />
+      <Tabs.Screen name="routines" options={{ href: null }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );
 }
