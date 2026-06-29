@@ -7,11 +7,13 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { resolveAsset } from '@/data/assets';
 import { sortedProjects } from '@/data/reference';
+import { useGridColumnWidth } from '@/hooks/use-layout-width';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function ProjectsScreen() {
   const theme = useTheme();
   const [filter, setFilter] = useState('All');
+  const projectCard = useGridColumnWidth(2, Spacing.two);
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -42,7 +44,7 @@ export default function ProjectsScreen() {
             <Pressable
               key={p.title}
               onPress={() => Linking.openURL(p.link)}
-              style={({ pressed }) => [styles.card, pressed && { opacity: 0.9 }]}>
+              style={({ pressed }) => [styles.card, { width: projectCard, height: projectCard }, pressed && { opacity: 0.9 }]}>
               {img ? (
                 <Image source={img} style={styles.cardImg} resizeMode="cover" />
               ) : (
@@ -70,15 +72,14 @@ export default function ProjectsScreen() {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, width: '100%' },
   card: {
-    width: '48.5%',
-    aspectRatio: 1,
     borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: Spacing.three,
+    marginBottom: Spacing.two,
     backgroundColor: '#111',
     justifyContent: 'flex-end',
+    maxWidth: '100%',
   },
   cardImg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', opacity: 0.55 },
   cardOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(10,10,10,0.4)' },

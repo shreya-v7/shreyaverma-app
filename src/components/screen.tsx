@@ -6,13 +6,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Fonts, Spacing } from '@/constants/theme';
+import { screenShell } from '@/constants/scroll';
 import { useTheme } from '@/hooks/use-theme';
 
 export function Screen({ children, style }: { children: ReactNode; style?: object }) {
   const theme = useTheme();
   return (
-    <View style={[{ flex: 1, backgroundColor: theme.background }, style]}>
-      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safe}>
+    <View style={[screenShell, { backgroundColor: theme.background }, style]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={screenShell}>
         {children}
       </SafeAreaView>
     </View>
@@ -59,9 +60,6 @@ export function Header({
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
   header: {
     paddingHorizontal: Spacing.four,
     paddingTop: Platform.select({ android: Spacing.four, default: Spacing.two }),
@@ -74,6 +72,7 @@ const styles = StyleSheet.create({
   headerText: {
     flex: 1,
     gap: 2,
+    minWidth: 0,
   },
   backBtn: {
     flexDirection: 'row',

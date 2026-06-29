@@ -1,16 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SpotifyEmbedCard } from '@/components/spotify-embed';
 import { BrandHeader, PillTabs, SiteScreen } from '@/components/site-ui';
 import { ThemedText } from '@/components/themed-text';
+import { verticalScrollLock } from '@/constants/scroll';
 import { Spacing } from '@/constants/theme';
 import { resolveAsset } from '@/data/assets';
 import { booksPosts, cinemaMoviePosts, cinemaTvPosts } from '@/data/diary';
-import { blogsPosts } from '@/data/diary';
 import { favoriteArtists } from '@/data/music';
+import { useBlogPosts } from '@/hooks/use-blog-posts';
+import { useGridColumnWidth } from '@/hooks/use-layout-width';
+import { useSpotifyEmbed } from '@/hooks/use-spotify-embed';
 import { useTheme } from '@/hooks/use-theme';
+import { getBlogReadLabel } from '@/lib/substack';
+import { stripSpotifyTitleSuffix } from '@/lib/spotify';
 import type { PersonalPost } from '@/types';
 
 type Tab = 'blogs' | 'books' | 'movies' | 'tv' | 'music';
@@ -30,6 +36,9 @@ export default function DiaryScreen() {
   const theme = useTheme();
   const [tab, setTab] = useState<Tab>('blogs');
   const [selected, setSelected] = useState<PersonalPost | null>(null);
+  const { posts: blogPosts, loading: blogsLoading, error: blogsError } = useBlogPosts();
+  const { embed, loading: spotifyLoading, error: spotifyError } = useSpotifyEmbed();
+  const artistSize = useGridColumnWidth(3);
 
   return (
     <SiteScreen>
@@ -52,24 +61,35 @@ export default function DiaryScreen() {
         />
       </View>
 
-      {tab === 'blogs' &&
-        blogsPosts.map((post) => (
-          <Pressable
-            key={post.id}
-            onPress={() => post.link && Linking.openURL(post.link)}
-            style={[styles.textCard, { borderColor: theme.line, backgroundColor: theme.panel }]}>
-            <ThemedText style={styles.cardTitle}>{post.title}</ThemedText>
-            <ThemedText type="small" themeColor="muted" style={{ marginTop: 6 }}>
-              {post.caption}
+      {tab === 'blogs' && (
+        <>
+          {blogsLoading ? (
+            <ActivityIndicator color={theme.ink} style={{ marginVertical: Spacing.four }} />
+          ) : null}
+          {blogsError ? (
+            <ThemedText type="small" themeColor="muted" style={{ marginBottom: Spacing.two }}>
+              Could not refresh from Substack. Showing saved posts.
             </ThemedText>
-            <View style={styles.openRow}>
-              <ThemedText type="small" style={{ color: theme.ink }}>
-                Read on the web
+          ) : null}
+          {blogPosts.map((post) => (
+            <Pressable
+              key={post.id}
+              onPress={() => post.link && Linking.openURL(post.link)}
+              style={[styles.textCard, { borderColor: theme.line, backgroundColor: theme.panel }]}>
+              <ThemedText style={styles.cardTitle}>{post.title}</ThemedText>
+              <ThemedText type="small" themeColor="muted" style={{ marginTop: 6 }}>
+                {post.caption}
               </ThemedText>
-              <Ionicons name="open-outline" size={13} color={theme.ink} />
-            </View>
-          </Pressable>
-        ))}
+              <View style={styles.openRow}>
+                <ThemedText type="small" style={{ color: theme.ink }}>
+                  {getBlogReadLabel(post)}
+                </ThemedText>
+                <Ionicons name="open-outline" size={13} color={theme.ink} />
+              </View>
+            </Pressable>
+          ))}
+        </>
+      )}
 
       {tab === 'books' &&
         booksPosts.map((post) => (
@@ -100,23 +120,68 @@ export default function DiaryScreen() {
       {tab === 'tv' && <PosterGrid posts={cinemaTvPosts()} onSelect={setSelected} />}
 
       {tab === 'music' && (
-        <View style={styles.artistGrid}>
-          {favoriteArtists.map((a) => {
-            const img = resolveAsset(a.image);
-            return (
-              <View key={a.name} style={styles.artist}>
-                {img ? (
-                  <Image source={img} style={styles.artistImg} />
-                ) : (
-                  <View style={[styles.artistImg, { backgroundColor: theme.backgroundSelected }]} />
-                )}
-                <ThemedText type="small" themeColor="muted" numberOfLines={1} style={styles.artistName}>
-                  {a.name}
+        <>
+          {spotifyLoading ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator color={theme.ink} />
+              <ThemedText type="small" themeColor="muted" style={{ marginTop: Spacing.two }}>
+                Loading from Spotify…
+              </ThemedText>
+            </View>
+          ) : null}
+
+          {spotifyError ? (
+            <ThemedText type="small" themeColor="muted" style={{ marginBottom: Spacing.three }}>
+              Spotify unavailable offline. Showing saved favorites.
+            </ThemedText>
+          ) : null}
+
+          {embed?.favoriteTrack ? <SpotifyEmbedCard item={embed.favoriteTrack} /> : null}
+
+          {embed?.playlists.map((item) => (
+            <SpotifyEmbedCard key={item.id} item={item} />
+          ))}
+
+          <ThemedText type="sectionTitle" style={{ marginBottom: Spacing.three }}>
+            Top artists
+          </ThemedText>
+          <View style={styles.artistGrid}>
+            {(embed?.topArtists.length ? embed.topArtists : null)?.map((artist) => (
+              <Pressable
+                key={artist.id}
+                onPress={() => Linking.openURL(artist.spotifyUrl)}
+                style={[styles.artist, { width: artistSize }]}>
+                <View style={[styles.artistImgWrap, { width: artistSize, height: artistSize }]}>
+                  {artist.imageUrl ? (
+                    <Image source={{ uri: artist.imageUrl }} style={styles.artistImg} resizeMode="cover" />
+                  ) : (
+                    <View style={[styles.artistImg, { backgroundColor: theme.backgroundSelected }]} />
+                  )}
+                </View>
+                <ThemedText type="small" themeColor="muted" numberOfLines={2} style={styles.artistName}>
+                  {stripSpotifyTitleSuffix(artist.title, 'Artist')}
                 </ThemedText>
-              </View>
-            );
-          })}
-        </View>
+              </Pressable>
+            )) ??
+              favoriteArtists.map((a) => {
+                const img = resolveAsset(a.image);
+                return (
+                  <View key={a.name} style={[styles.artist, { width: artistSize }]}>
+                    <View style={[styles.artistImgWrap, { width: artistSize, height: artistSize }]}>
+                      {img ? (
+                        <Image source={img} style={styles.artistImg} resizeMode="cover" />
+                      ) : (
+                        <View style={[styles.artistImg, { backgroundColor: theme.backgroundSelected }]} />
+                      )}
+                    </View>
+                    <ThemedText type="small" themeColor="muted" numberOfLines={2} style={styles.artistName}>
+                      {a.name}
+                    </ThemedText>
+                  </View>
+                );
+              })}
+          </View>
+        </>
       )}
 
       <ReviewModal post={selected} onClose={() => setSelected(null)} />
@@ -132,19 +197,26 @@ function PosterGrid({
   onSelect: (p: PersonalPost) => void;
 }) {
   const theme = useTheme();
+  const posterW = useGridColumnWidth(3);
+  const posterH = Math.round(posterW / 0.7);
   return (
     <View style={styles.posterGrid}>
       {posts.map((p) => {
         const img = resolveAsset(p.image);
         const title = p.metadata?.movie ?? p.metadata?.show ?? p.title ?? '';
         return (
-          <Pressable key={p.id} onPress={() => onSelect(p)} style={styles.poster}>
-            {img ? (
-              <Image source={img} style={styles.posterImg} resizeMode="cover" />
-            ) : (
-              <View style={[styles.posterImg, { backgroundColor: theme.backgroundSelected }]} />
-            )}
-            <ThemedText type="small" themeColor="muted" numberOfLines={1} style={{ marginTop: 6 }}>
+          <Pressable
+            key={p.id}
+            onPress={() => onSelect(p)}
+            style={[styles.poster, { width: posterW }]}>
+            <View style={[styles.posterImgWrap, { width: posterW, height: posterH }]}>
+              {img ? (
+                <Image source={img} style={styles.posterImg} resizeMode="cover" />
+              ) : (
+                <View style={[styles.posterImg, { backgroundColor: theme.backgroundSelected }]} />
+              )}
+            </View>
+            <ThemedText type="small" themeColor="muted" numberOfLines={2} style={{ marginTop: 6 }}>
               {title}
             </ThemedText>
           </Pressable>
@@ -168,10 +240,17 @@ function ReviewModal({ post, onClose }: { post: PersonalPost | null; onClose: ()
             <View style={styles.modalHandleWrap}>
               <View style={[styles.modalHandle, { backgroundColor: theme.line }]} />
             </View>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: Spacing.four }}>
+            <ScrollView
+              {...verticalScrollLock}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ padding: Spacing.four, width: '100%' }}>
               <View style={styles.modalHead}>
-                {img ? <Image source={img} style={styles.modalPoster} resizeMode="cover" /> : null}
-                <View style={{ flex: 1 }}>
+                {img ? (
+                  <View style={styles.modalPosterWrap}>
+                    <Image source={img} style={styles.modalPoster} resizeMode="cover" />
+                  </View>
+                ) : null}
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <ThemedText type="sectionTitle">{title}</ThemedText>
                   {post.metadata?.author ? (
                     <ThemedText type="small" themeColor="faint" style={{ marginTop: 2 }}>
@@ -201,9 +280,7 @@ function ReviewModal({ post, onClose }: { post: PersonalPost | null; onClose: ()
                 </View>
               ) : null}
 
-              <Pressable
-                onPress={onClose}
-                style={[styles.closeBtn, { borderColor: theme.line }]}>
+              <Pressable onPress={onClose} style={[styles.closeBtn, { borderColor: theme.line }]}>
                 <ThemedText type="small" style={{ color: theme.ink }}>
                   Close
                 </ThemedText>
@@ -222,23 +299,29 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     padding: Spacing.three,
     marginBottom: Spacing.two,
+    width: '100%',
+    maxWidth: '100%',
   },
   cardTitle: { fontFamily: 'Geist_600SemiBold', fontSize: 16 },
   openRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.three },
-  bookHead: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
-  posterGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  poster: { width: '31%', marginBottom: Spacing.three },
-  posterImg: { width: '100%', aspectRatio: 0.7, borderRadius: 10 },
-  artistGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  artist: { width: '31%', alignItems: 'center', marginBottom: Spacing.four },
-  artistImg: { width: '100%', aspectRatio: 1, borderRadius: 999 },
-  artistName: { marginTop: 6, textAlign: 'center' },
+  bookHead: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two, minWidth: 0 },
+  loadingBox: { alignItems: 'center', paddingVertical: Spacing.four },
+  posterGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, width: '100%' },
+  poster: { marginBottom: Spacing.two, maxWidth: '100%' },
+  posterImgWrap: { borderRadius: 10, overflow: 'hidden' },
+  posterImg: { width: '100%', height: '100%' },
+  artistGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, width: '100%' },
+  artist: { alignItems: 'center', marginBottom: Spacing.two, maxWidth: '100%' },
+  artistImgWrap: { borderRadius: 999, overflow: 'hidden' },
+  artistImg: { width: '100%', height: '100%' },
+  artistName: { marginTop: 6, textAlign: 'center', fontSize: 11 },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '88%' },
   modalHandleWrap: { alignItems: 'center', paddingTop: Spacing.two },
   modalHandle: { width: 40, height: 4, borderRadius: 2 },
   modalHead: { flexDirection: 'row', gap: Spacing.three, alignItems: 'flex-start' },
-  modalPoster: { width: 80, height: 114, borderRadius: 10 },
+  modalPosterWrap: { width: 72, height: 102, borderRadius: 10, overflow: 'hidden' },
+  modalPoster: { width: '100%', height: '100%' },
   bullet: { flexDirection: 'row', gap: 6 },
   closeBtn: {
     marginTop: Spacing.four,

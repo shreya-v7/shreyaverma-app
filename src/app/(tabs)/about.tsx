@@ -52,9 +52,11 @@ export default function AboutScreen() {
               key={cert.title}
               style={[styles.certCard, { borderColor: theme.line, backgroundColor: theme.panel }]}>
               {img ? (
-                <Image source={img} style={styles.certImg} resizeMode="cover" />
+                <View style={styles.certImgWrap}>
+                  <Image source={img} style={styles.certImg} resizeMode="cover" />
+                </View>
               ) : (
-                <View style={[styles.certImg, { backgroundColor: theme.backgroundSelected }]} />
+                <View style={[styles.certImgWrap, { backgroundColor: theme.backgroundSelected }]} />
               )}
               <View style={{ flex: 1 }}>
                 <ThemedText style={styles.certTitle}>{cert.title}</ThemedText>
@@ -102,7 +104,7 @@ function AchievementRow({ achievement }: { achievement: Achievement }) {
       onPress={() => setOpen((o) => !o)}
       style={[styles.achCard, { borderColor: theme.line, backgroundColor: theme.panel }]}>
       <View style={styles.achTop}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <ThemedText style={styles.certTitle}>{achievement.title}</ThemedText>
           <ThemedText type="small" themeColor="faint" style={{ marginTop: 2 }}>
             {achievement.context}
@@ -166,8 +168,11 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     padding: Spacing.three,
     marginBottom: Spacing.two,
+    width: '100%',
+    minWidth: 0,
   },
-  certImg: { width: 48, height: 48, borderRadius: 10 },
+  certImgWrap: { width: 44, height: 44, borderRadius: 10, overflow: 'hidden' },
+  certImg: { width: '100%', height: '100%' },
   certTitle: { fontFamily: 'Geist_600SemiBold', fontSize: 15 },
   achCard: {
     borderRadius: 14,
@@ -175,7 +180,7 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     marginBottom: Spacing.two,
   },
-  achTop: { flexDirection: 'row', gap: Spacing.two },
+  achTop: { flexDirection: 'row', gap: Spacing.two, minWidth: 0, width: '100%' },
   catChip: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
   bullet: { flexDirection: 'row', gap: 6 },
   achLink: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: Spacing.two },

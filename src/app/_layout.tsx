@@ -17,6 +17,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LockScreen } from '@/components/lock-screen';
 import { PrivacyCover } from '@/components/privacy-cover';
 import { Colors } from '@/constants/theme';
+import { screenShell } from '@/constants/scroll';
 import { DATABASE_NAME, migrateDb } from '@/lib/db';
 import { LockProvider, useLock } from '@/lib/lock-context';
 
@@ -50,8 +51,8 @@ function Gate() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background } }}>
+    <View style={screenShell}>
+      <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background, ...screenShell } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="entry/[id]" options={{ presentation: 'modal', headerShown: false }} />
       </Stack>

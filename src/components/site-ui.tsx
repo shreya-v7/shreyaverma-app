@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { screenShell, verticalScrollLock } from '@/constants/scroll';
 import { resolveAsset } from '@/data/assets';
 import { socialItems } from '@/data/site';
 import { useTheme } from '@/hooks/use-theme';
@@ -29,10 +30,13 @@ export function SiteScreen({
 }) {
   const theme = useTheme();
   return (
-    <View style={{ flex: 1, backgroundColor: theme.paper }}>
-      <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
+    <View style={[screenShell, { backgroundColor: theme.paper }]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={screenShell}>
         <ScrollView
+          {...verticalScrollLock}
+          style={screenShell}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={[styles.scroll, contentStyle]}>
           <View style={styles.column}>{children}</View>
         </ScrollView>
@@ -68,7 +72,7 @@ export function SectionRow({
   const theme = useTheme();
   return (
     <View style={styles.sectionRow}>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, minWidth: 0 }}>
         <ThemedText type="sectionTitle">{title}</ThemedText>
         {subtitle ? (
           <ThemedText type="small" themeColor="muted" style={{ marginTop: 4 }}>
@@ -121,10 +125,7 @@ export function PillTabs<T extends string>({
 }) {
   const theme = useTheme();
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.pills}>
+    <View style={styles.pillsWrap}>
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -147,7 +148,7 @@ export function PillTabs<T extends string>({
           </Pressable>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -172,11 +173,13 @@ export function CompanyCard({ company, defaultOpen }: { company: Company; defaul
     <View style={[styles.card, { borderColor: theme.line, backgroundColor: theme.panel }]}>
       <Pressable onPress={() => setOpen((o) => !o)} style={styles.companyHeader}>
         {logo ? (
-          <Image source={logo} style={styles.logo} resizeMode="cover" />
+          <View style={styles.logoWrap}>
+            <Image source={logo} style={styles.logo} resizeMode="cover" />
+          </View>
         ) : (
-          <View style={[styles.logo, { backgroundColor: theme.backgroundSelected }]} />
+          <View style={[styles.logoWrap, { backgroundColor: theme.backgroundSelected }]} />
         )}
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <ThemedText style={styles.companyName}>{company.company}</ThemedText>
           <ThemedText type="small" themeColor="muted">
             {company.roles[0].title}
@@ -210,7 +213,7 @@ function RoleBlock({ role }: { role: Role }) {
           <ThemedText type="small" themeColor="faint" style={styles.bulletDot}>
             ·
           </ThemedText>
-          <ThemedText type="small" themeColor="muted" style={{ flex: 1 }}>
+          <ThemedText type="small" themeColor="muted" style={{ flex: 1, minWidth: 0 }}>
             {line}
           </ThemedText>
         </View>
@@ -234,18 +237,28 @@ function RoleBlock({ role }: { role: Role }) {
 
 const styles = StyleSheet.create({
   scroll: {
+    width: '100%',
+    maxWidth: '100%',
     paddingHorizontal: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.six,
-    alignItems: 'center',
+    alignItems: 'stretch',
+    flexGrow: 1,
   },
-  column: { width: '100%', maxWidth: MaxContentWidth },
-  brand: { paddingTop: Spacing.two, paddingBottom: Spacing.four },
+  column: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    overflow: 'hidden',
+  },
+  brand: { paddingTop: Spacing.two, paddingBottom: Spacing.four, width: '100%' },
   sectionRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     gap: Spacing.three,
     marginBottom: Spacing.three,
+    width: '100%',
+    minWidth: 0,
   },
   divider: { height: StyleSheet.hairlineWidth, width: '100%', marginVertical: Spacing.four },
   social: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three, alignItems: 'center' },
@@ -255,7 +268,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pills: { gap: Spacing.two, paddingVertical: Spacing.one },
+  pillsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    paddingVertical: Spacing.one,
+    width: '100%',
+  },
   pill: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
@@ -274,8 +293,9 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     marginBottom: Spacing.two,
   },
-  companyHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  logo: { width: 40, height: 40, borderRadius: 10 },
+  companyHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, minWidth: 0 },
+  logoWrap: { width: 36, height: 36, borderRadius: 8, overflow: 'hidden' },
+  logo: { width: '100%', height: '100%' },
   companyName: { fontFamily: 'Geist_600SemiBold', fontSize: 16 },
   roles: { marginTop: Spacing.three, gap: Spacing.three },
   roleBlock: { borderLeftWidth: 2, paddingLeft: Spacing.three, gap: 3 },

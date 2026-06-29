@@ -8,8 +8,9 @@ import { Spacing } from '@/constants/theme';
 import { profileImage, resolveAsset } from '@/data/assets';
 import { bio, metaData } from '@/data/site';
 import { experienceData, sortedProjects } from '@/data/reference';
-import { blogsPosts } from '@/data/diary';
+import { useBlogPosts } from '@/hooks/use-blog-posts';
 import { useTheme } from '@/hooks/use-theme';
+import { getBlogReadLabel } from '@/lib/substack';
 
 function highlightCompanies() {
   const names = ['Proofpoint', 'Morgan Stanley'];
@@ -27,7 +28,8 @@ export default function HomeScreen() {
   const research = sortedProjects
     .filter((p) => p.title === 'Multifactor Authentication' || p.title === 'DiagZone')
     .slice(0, 2);
-  const latestBlogs = blogsPosts.slice(0, 2);
+  const { posts: blogPosts } = useBlogPosts();
+  const latestBlogs = blogPosts.slice(0, 2);
 
   return (
     <SiteScreen>
@@ -35,12 +37,16 @@ export default function HomeScreen() {
 
       <View style={styles.hero}>
         <Pressable onPress={() => Linking.openURL('https://x.com/shreyasapphire')}>
-          <Image source={profileImage} style={styles.avatar} />
+          <View style={styles.avatarWrap}>
+            <Image source={profileImage} style={styles.avatar} resizeMode="cover" />
+          </View>
         </Pressable>
 
         <View style={styles.tagline}>
-          <ThemedText type="subtitle">{metaData.tagline}</ThemedText>
-          <ThemedText type="small" themeColor="muted" style={{ marginTop: 2 }}>
+          <ThemedText type="subtitle" style={styles.taglineMain}>
+            {metaData.tagline}
+          </ThemedText>
+          <ThemedText type="small" themeColor="muted" style={styles.taglineAside}>
             {metaData.taglineAside}
           </ThemedText>
         </View>
@@ -76,10 +82,10 @@ export default function HomeScreen() {
               </View>
               <View style={[styles.timelineCard, { borderColor: theme.line, backgroundColor: theme.panel }]}>
                 <View style={styles.timelineTop}>
-                  <ThemedText type="code" themeColor="faint">
+                  <ThemedText type="code" themeColor="faint" style={styles.timelineMeta} numberOfLines={1}>
                     {String(index + 1).padStart(2, '0')} · {company.company}
                   </ThemedText>
-                  <ThemedText type="code" themeColor="faint">
+                  <ThemedText type="code" themeColor="faint" style={styles.timelineDuration} numberOfLines={1}>
                     {role.duration}
                   </ThemedText>
                 </View>
@@ -110,7 +116,7 @@ export default function HomeScreen() {
           onPress={() => Linking.openURL(quantastica.link)}
           style={({ pressed }) => [styles.spotlight, pressed && { opacity: 0.92 }]}>
           {resolveAsset(quantastica.image) ? (
-            <Image source={resolveAsset(quantastica.image)} style={styles.spotlightImg} />
+            <Image source={resolveAsset(quantastica.image)} style={styles.spotlightImg} resizeMode="cover" />
           ) : null}
           <View style={styles.spotlightOverlay} />
           <View style={styles.spotlightContent}>
@@ -188,7 +194,7 @@ export default function HomeScreen() {
           </ThemedText>
           <View style={styles.researchFoot}>
             <ThemedText type="small" style={{ color: theme.ink }}>
-              Read
+              {getBlogReadLabel(post)}
             </ThemedText>
             <Ionicons name="open-outline" size={14} color={theme.ink} />
           </View>
@@ -199,26 +205,39 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { alignItems: 'center', marginBottom: Spacing.five },
-  avatar: { width: 140, height: 140, borderRadius: 70, marginBottom: Spacing.four },
-  tagline: { alignItems: 'center', flexDirection: 'row', gap: 8, marginBottom: Spacing.three },
-  bio: { textAlign: 'left', marginBottom: Spacing.two, alignSelf: 'stretch' },
-  timeline: { paddingLeft: Spacing.one },
+  hero: { alignItems: 'center', marginBottom: Spacing.five, width: '100%', maxWidth: '100%' },
+  avatarWrap: {
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    overflow: 'hidden',
+    marginBottom: Spacing.four,
+  },
+  avatar: { width: '100%', height: '100%' },
+  tagline: { alignItems: 'center', marginBottom: Spacing.three, width: '100%' },
+  taglineMain: { textAlign: 'center', width: '100%' },
+  taglineAside: { marginTop: 4, textAlign: 'center', width: '100%' },
+  bio: { textAlign: 'left', marginBottom: Spacing.two, alignSelf: 'stretch', width: '100%' },
+  timeline: { paddingLeft: Spacing.one, width: '100%' },
   timelineLine: { position: 'absolute', top: 6, bottom: 6, left: 9, width: StyleSheet.hairlineWidth },
   timelineItem: { flexDirection: 'row', gap: Spacing.three, marginBottom: Spacing.three },
   dotWrap: { width: 20, alignItems: 'center', marginTop: 4 },
   dotOuter: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   dotInner: { width: 7, height: 7, borderRadius: 4 },
-  timelineCard: { flex: 1, borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: Spacing.three },
-  timelineTop: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two },
+  timelineCard: { flex: 1, minWidth: 0, borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, padding: Spacing.three },
+  timelineTop: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two, minWidth: 0 },
+  timelineMeta: { flex: 1, minWidth: 0 },
+  timelineDuration: { flexShrink: 0, maxWidth: '42%' },
   roleTitle: { fontFamily: 'Geist_600SemiBold', fontSize: 15, marginTop: 4 },
   spotlight: {
-    height: 280,
+    height: 220,
     borderRadius: 20,
     overflow: 'hidden',
     marginBottom: Spacing.two,
     justifyContent: 'flex-end',
     backgroundColor: '#111',
+    width: '100%',
+    maxWidth: '100%',
   },
   spotlightImg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', opacity: 0.4 },
   spotlightOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(10,10,10,0.45)' },
@@ -231,6 +250,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.16)',
   },
-  researchCard: { borderRadius: 16, borderWidth: StyleSheet.hairlineWidth, padding: Spacing.three, marginBottom: Spacing.two },
+  researchCard: {
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: Spacing.three,
+    marginBottom: Spacing.two,
+    width: '100%',
+    maxWidth: '100%',
+  },
   researchFoot: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: Spacing.three },
 });
